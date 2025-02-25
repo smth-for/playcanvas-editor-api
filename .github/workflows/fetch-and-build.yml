@@ -24,7 +24,7 @@ jobs:
 
     - name: Change package.json name
       run: |
-        jq '.name = "${{ github.repository }}"' package.json > tmp.$$.json && mv tmp.$$.json package.json
+        jq '.name = "@${{ github.repository }}"' package.json > tmp.$$.json && mv tmp.$$.json package.json
 
     - name: Get package version
       id: get-version
@@ -33,7 +33,7 @@ jobs:
     - name: Check if package version is already published
       id: check-published
       run: |
-        if npm view ${{ github.repository }}@${{ steps.get-version.outputs.version }} version > /dev/null 2>&1; then
+        if npm view @${{ github.repository }}@${{ steps.get-version.outputs.version }} version > /dev/null 2>&1; then
           echo "Package version ${{ steps.get-version.outputs.version }} is already published."
           exit 0
         else
