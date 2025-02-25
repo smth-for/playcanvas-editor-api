@@ -1,0 +1,52 @@
+name: Daily Build and Publish
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs every day at midnight UTC
+  workflow_dispatch: # Allows manual invocation
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        repository: playcanvas/editor-api
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com/
+          scope: '@smth-for'
+
+    - name: Change package.json name
+      run: |
+        jq '.name = "${{ github.repository }}"' package.json > tmp.$$.json && mv tmp.$$.json package.json
+
+    - name: Get package version
+      id: get-version
+      run: echo "::set-output name=version::$(jq -r .version package.json)"
+
+    - name: Check if package version is already published
+      id: check-published
+      run: |
+        if npm view ${{ github.repository }}@${{ steps.get-version.outputs.version }} version > /dev/null 2>&1; then
+          echo "Package version ${{ steps.get-version.outputs.version }} is already published."
+          exit 0
+        else
+          echo "Package version ${{ steps.get-version.outputs.version }} is not published yet."
+        fi
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build package
+      run: npm run build
+
+    - name: Publish to GitHub Package Registry
+      run: npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
