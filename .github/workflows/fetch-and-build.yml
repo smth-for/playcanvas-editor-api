@@ -22,6 +22,11 @@ jobs:
           registry-url: https://npm.pkg.github.com/
           scope: '@smth-for'
 
+    - name: Create .npmrc file
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
+        echo "@smth-for:registry=https://npm.pkg.github.com" >> .npmrc
+
     - name: Change package.json name
       run: |
         jq '.name = "@${{ github.repository }}"' package.json > tmp.$$.json && mv tmp.$$.json package.json
@@ -40,13 +45,13 @@ jobs:
           echo "Package version ${{ steps.get-version.outputs.version }} is not published yet."
         fi
 
-    - name: Install dependencies
-      run: npm install
+    # - name: Install dependencies
+    #   run: npm install
 
-    - name: Build package
-      run: npm run build
+    # - name: Build package
+    #   run: npm run build
 
-    - name: Publish to GitHub Package Registry
-      run: npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # - name: Publish to GitHub Package Registry
+    #   run: npm publish
+    #   env:
+    #     NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
